@@ -1,0 +1,61 @@
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Archivos de entorno virtual (puede variar según tu setup)
+env/
+venv/
+ENV/
+.venv/
+.ENV/
+
+# Archivos del entorno de desarrollo
+*.env
+*.env.* 
+.envrc
+
+# Archivos de configuración del editor
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Archivos de base de datos (si usas SQLite)
+*.sqlite3
+
+# Archivos de logs
+*.log
+
+# Archivos generados por Django
+db.sqlite3
+media/
+staticfiles/
+static_root/
+static/
+
+# Archivos de compilación o distribución
+*.pot
+*.mo
+
+# Archivos de tests
+.coverage
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.tox/
+.junit.xml
+
+# Archivos de distribución
+build/
+dist/
+*.egg-info/
+
+# Archivos de Docker (opcional si usas Docker)
+*.pid
+*.pid.lock
+
+# Archivos de seguridad
+secrets.json
