@@ -2,11 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
-from django.views.generic import ListView, CreateView, UpdateView, DetailView
+from django.views.generic import ListView, CreateView, UpdateView, DetailView, TemplateView
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.http import JsonResponse
-from django.core.paginator import Paginator
+from django.contrib.auth import logout
+from django.shortcuts import redirect
 
 from apps.citas.models import Cita
 from apps.citas.forms import CitaForm, CitaBusquedaForm
@@ -16,24 +17,35 @@ from apps.pacientes.models import Paciente
 from apps.pacientes.forms import PacienteForm
 from core.exceptions import BusinessLogicError
 
+class HomeView(TemplateView):
+    template_name = 'home.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            cita_service = CitaService()
+            context['total_citas'] = cita_service.get_active_citas().count()
+            context['total_pacientes'] = Paciente.objects.count()
+        return context
+
 class CitaListView(LoginRequiredMixin, ListView):
     model = Cita
     template_name = 'citas/cita_list.html'
     context_object_name = 'citas'
     paginate_by = 10
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.cita_service = CitaService()
     
     def get_queryset(self):
-        status = self.request.GET.get('status', 'active')
+        estado = self.request.GET.get('estado', 'active')
         query = self.request.GET.get('query', '')
         
-        if status == 'deleted':
-            citas = self.cita_service.obtener_citas_eliminadas()
+        if estado == 'deleted':
+            citas = self.cita_service.get_deleted_citas()
         else:
-            citas = self.cita_service.obtener_citas_activas()
+            citas = self.cita_service.get_active_citas()
         
         if query:
             citas = citas.filter(
@@ -49,7 +61,7 @@ class CitaListView(LoginRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['search_form'] = CitaBusquedaForm(self.request.GET)
-        context['estatus_actual'] = self.request.GET.get('status', 'active')
+        context['estatus_actual'] = self.request.GET.get('estado', 'active')
         return context
 
 class CitaCreateView(LoginRequiredMixin, CreateView):
@@ -58,8 +70,8 @@ class CitaCreateView(LoginRequiredMixin, CreateView):
     template_name = 'citas/cita_form.html'
     success_url = reverse_lazy('citas:list')
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.cita_service = CitaService()
         self.paciente_service = PacienteService()
     
@@ -72,7 +84,7 @@ class CitaCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         try:
             paciente_id = self.request.POST.get('paciente')
-            paciente = self.paciente_service.obetener_paciente_por_id(paciente_id)
+            paciente = self.paciente_service.obtener_paciente_por_id(paciente_id)
             
             cita_data = {
                 'paciente': paciente,
@@ -96,15 +108,15 @@ class CitaUpdateView(LoginRequiredMixin, UpdateView):
     template_name = 'citas/cita_form.html'
     success_url = reverse_lazy('citas:list')
     
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.cita_service = CitaService()
     
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
-        # Deshabilitar campos que no se pueden editar
-        form.fields['paciente'].widget.attrs['readonly'] = True
-        form.fields['numero_cita'].widget.attrs['readonly'] = True
+        # El paciente no se puede editar
+        if hasattr(form.fields, 'paciente'):
+            form.fields['paciente'].widget.attrs['readonly'] = True
         return form
     
     def form_valid(self, form):
@@ -127,14 +139,14 @@ class CitaUpdateView(LoginRequiredMixin, UpdateView):
 class CitaDetailView(LoginRequiredMixin, DetailView):
     model = Cita
     template_name = 'citas/cita_detail.html'
-    context_object_name = 'cita'
+    context_object_name = 'form'
 
 @login_required
 def delete_cita(request, pk):
     cita_service = CitaService()
     
     try:
-        cita_service.delete_cita(pk, request.usuario)
+        cita_service.delete_cita(pk, request.user)
         messages.success(request, 'Cita eliminada exitosamente.')
     except BusinessLogicError as e:
         messages.error(request, str(e))
@@ -142,7 +154,7 @@ def delete_cita(request, pk):
     return redirect('citas:list')
 
 @login_required
-def restore_cita(request, pk):
+def restaurar_cita(request, pk):
     cita_service = CitaService()
     
     try:
@@ -152,22 +164,3 @@ def restore_cita(request, pk):
         messages.error(request, str(e))
     
     return redirect('citas:list')
-
-@login_required
-def create_paciente_ajax(request):
-    if request.method == 'POST':
-        form = PacienteForm(request.POST)
-        if form.is_valid():
-            paciente = form.save()
-            return JsonResponse({
-                'success': True,
-                'paciente_id': paciente.id,
-                'paciente_name': paciente.full_name
-            })
-        else:
-            return JsonResponse({
-                'success': False,
-                'errors': form.errors
-            })
-    
-    return JsonResponse({'success': False, 'error': 'Método no permitido'})

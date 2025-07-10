@@ -4,29 +4,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from apps.pacientes.models import Paciente
 from core.models import BaseModel
-
-class Doctor(BaseModel):
-    usuario = models.OneToOneField(
-        User,
-        on_delete=models.CASCADE,
-        related_name='doctor_prerfil'
-    )
-    especialidad = models.CharField(
-        max_length=100,
-        verbose_name='Especialización'
-    )
-    numero_licencia = models.CharField(
-        max_length=50,
-        unique=True,
-        verbose_name='Número de Licencia'
-    )
-    
-    class Meta:
-        verbose_name = 'Doctor'
-        verbose_name_plural = 'Doctores'
-    
-    def __str__(self):
-        return f"Dr. {self.usuario.get_full_name()}"
+from apps.usuarios.models import Doctor
 
 class Cita(BaseModel):
     TIPOS_CITA = [
@@ -117,7 +95,7 @@ class Cita(BaseModel):
         import string
         return ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
     
-    def sotf_eliminar(self, usuario):
+    def eliminacion_logica(self, usuario):
         self.estado = 'deleted'
         self.fecha_eliminacion = timezone.now()
         self.eliminado_por = usuario

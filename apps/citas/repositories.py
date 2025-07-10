@@ -5,11 +5,11 @@ from apps.pacientes.models import Paciente
 class CitaRepository:
     @staticmethod
     def obtener_citas_activas():
-        return Cita.objects.filter(status='active').select_related('paciente', 'doctor__usuario')
+        return Cita.objects.filter(estado='active').select_related('paciente', 'doctor__usuario')
     
     @staticmethod
     def obtener_citas_eliminadas():
-        return Cita.objects.filter(status='deleted').select_related('paciente', 'doctor__usuario')
+        return Cita.objects.filter(estado='deleted').select_related('paciente', 'doctor__usuario')
     
     @staticmethod
     def obtener_cita_por_id(cita_id):
@@ -36,6 +36,3 @@ class CitaRepository:
             setattr(cita, key, value)
         cita.save()
         return cita
-
-        
-

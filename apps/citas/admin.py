@@ -1,9 +1,11 @@
 from django.contrib import admin
+from .models import Cita
 
+@admin.register(Cita)
 class CitaAdmin(admin.ModelAdmin):
     list_display = ['numero_cita', 'paciente', 'doctor', 'tipo_cita', 'fecha_hora_cita', 'estado']
     list_filter = ['estado', 'tipo_cita', 'fecha_hora_cita', 'created_at']
-    search_fields = ['numero_cita', 'paciente__nombre', 'paciente__apellido', 'doctor__user__first_name', 'doctor__user__last_name']
+    search_fields = ['numero_cita', 'paciente__nombre', 'paciente__apellido', 'doctor__usuario__first_name', 'doctor__usuario__last_name']
     readonly_fields = ['numero_cita', 'created_at', 'updated_at']
     
     fieldsets = (
@@ -29,16 +31,16 @@ class CitaAdmin(admin.ModelAdmin):
             readonly_fields.extend(['paciente'])
         return readonly_fields
 
-    actions = ['soft_delete_citas', 'restore_citas']
+    actions = ['eliminacion_logica_citas', 'restaurar_citas']
     
-    def soft_delete_citas(self, request, queryset):
+    def eliminacion_logica_citas(self, request, queryset):
         for cita in queryset:
-            cita.soft_delete(request.user)
+            cita.eliminacion_logica(request.user)
         self.message_user(request, f"{queryset.count()} citas eliminadas correctamente.")
-    soft_delete_citas.short_description = "Eliminar citas seleccionadas"
+    eliminacion_logica_citas.short_description = "Eliminar citas seleccionadas"
     
-    def restore_citas(self, request, queryset):
+    def restaurar_citas(self, request, queryset):
         for cita in queryset:
-            cita.restore()
+            cita.restaurar()
         self.message_user(request, f"{queryset.count()} citas restauradas correctamente.")
-    restore_citas.short_description = "Restaurar citas seleccionadas"
+    restaurar_citas.short_description = "Restaurar citas seleccionadas"

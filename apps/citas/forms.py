@@ -1,7 +1,9 @@
 from django import forms
 from django.utils import timezone
-from apps.citas.models import Cita, Doctor
+from apps.citas.models import Cita
+from apps.usuarios.models import Doctor
 
+INPUT_CLASS = "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 class CitaForm(forms.ModelForm):
     class Meta:
         model = Cita
@@ -10,13 +12,14 @@ class CitaForm(forms.ModelForm):
             'fecha_hora_cita': forms.DateTimeInput(
                 attrs={
                     'type': 'datetime-local',
-                    'class': 'form-control'
+                    'class': 'form-control ' + INPUT_CLASS
                 }
             ),
-            'doctor': forms.Select(attrs={'class': 'form-control'}),
-            'tipo_cita': forms.Select(attrs={'class': 'form-control'}),
+            'doctor': forms.Select(attrs={'class': 'form-control ' + INPUT_CLASS}),
+
+            'tipo_cita': forms.Select(attrs={'class': 'form-control ' + INPUT_CLASS}),
             'notas': forms.Textarea(attrs={
-                'class': 'form-control',
+                'class': 'form-control ' + INPUT_CLASS,
                 'rows': 3
             }),
         }

@@ -5,8 +5,9 @@ from rest_framework.permissions import IsAuthenticated
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 
-from .models import Cita, Doctor
-from .serializers import CitaSerializer, DoctorSerializer, PacienteSerializer
+from apps.usuarios.models import Doctor
+from .models import Cita
+from .serializers import CitaSerializer
 from .services import CitaService
 from apps.pacientes.models import Paciente
 from core.exceptions import BusinessLogicError
@@ -72,7 +73,7 @@ class CitaViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
-    def soft_delete(self, request, pk=None):
+    def eliminacion_logica(self, request, pk=None):
         try:
             cita = self.cita_service.delete_cita(pk, request.user)
             serializer = self.get_serializer(cita)
@@ -81,9 +82,9 @@ class CitaViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=True, methods=['post'])
-    def restore(self, request, pk=None):
+    def restaurar(self, request, pk=None):
         try:
-            cita = self.cita_service.restore_cita(pk)
+            cita = self.cita_service.restaurar_cita(pk)
             serializer = self.get_serializer(cita)
             return Response(serializer.data)
         except BusinessLogicError as e:
@@ -111,13 +112,3 @@ class CitaViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(citas, many=True)
         return Response(serializer.data)
 
-class DoctorViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Doctor.objects.select_related('user').all()
-    serializer_class = DoctorSerializer
-    permission_classes = [IsAuthenticated]
-
-class PacienteViewSet(viewsets.ModelViewSet):
-    queryset = Paciente.objects.all().order_by('apellido', 'nombre')
-    serializer_class = PacienteSerializer
-    permission_classes = [IsAuthenticated]
-    search_fields = ['nombre', 'apellido', 'email']

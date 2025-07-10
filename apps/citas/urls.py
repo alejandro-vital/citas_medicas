@@ -4,11 +4,11 @@ from . import views
 app_name = 'citas'
 
 urlpatterns = [
-    path('', views.CitaListView.as_view(), name='list'),
-    path('create/', views.CitaCreateView.as_view(), name='create'),
-    path('<int:pk>/', views.CitaDetailView.as_view(), name='detail'),
-    path('<int:pk>/edit/', views.CitaUpdateView.as_view(), name='edit'),
-    path('<int:pk>/delete/', views.delete_cita, name='delete'),
-    path('<int:pk>/restore/', views.restore_cita, name='restore'),
-    path('ajax/create-paciente/', views.create_paciente_ajax, name='create_paciente_ajax'),
+    path('', views.HomeView.as_view(), name='home'),
+    path('citas/', views.CitaListView.as_view(), name='list'),
+    path('citas/create/', views.CitaCreateView.as_view(), name='create'),
+    path('citas/<int:pk>/', views.CitaDetailView.as_view(), name='detail'),
+    path('citas/<int:pk>/edit/', views.CitaUpdateView.as_view(), name='edit'),
+    path('citas/<int:pk>/delete/', views.delete_cita, name='delete'),
+    path('citas/<int:pk>/restaurar/', views.restaurar_cita, name='restaurar'),
 ]

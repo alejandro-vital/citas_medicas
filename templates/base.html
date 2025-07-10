@@ -13,27 +13,45 @@
             <div class="flex justify-between items-center py-4">
                 <div class="flex items-center space-x-4">
                     <i class="fas fa-hospital text-2xl"></i>
-                    <h1 class="text-xl font-bold">Clínica Reina Madre</h1>
+                    <a href="{% url 'citas:home' %}" class="text-xl font-bold hover:text-blue-200">Clínica Reina Madre</a>
                 </div>
                 {% if user.is_authenticated %}
                 <div class="flex items-center space-x-4">
-                    <a href="{% url 'citas:list' %}" class="hover:text-blue-200">
+                    <a href="{% url 'citas:list' %}" class="hover:text-blue-200 transition duration-200">
                         <i class="fas fa-calendar-alt mr-2"></i>Citas
                     </a>
-                    <a href="{% url 'pacients:list' %}" class="hover:text-blue-200">
-                        <i class="fas fa-users mr-2"></i>Pacientes
+                    <a href="{% url 'admin:index' %}" class="hover:text-blue-200 transition duration-200">
+                        <i class="fas fa-cogs mr-2"></i>Admin
                     </a>
-                    <div class="relative group">
-                        <button class="hover:text-blue-200 flex items-center">
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="relative">
+                        <button id="user-menu-button" class="hover:text-blue-200 flex items-center transition duration-200 focus:outline-none">
                             <i class="fas fa-user mr-2"></i>{{ user.username }}
-                            <i class="fas fa-chevron-down ml-1"></i>
+                            <i class="fas fa-chevron-down ml-1 transition-transform duration-200" id="dropdown-arrow"></i>
                         </button>
-                        <div class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                            <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                        
+                        <!-- Dropdown content -->
+                        <div id="user-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 hidden">
+                            <div class="px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                                <div class="font-medium">{{ user.get_full_name|default:user.username }}</div>
+                                <div class="text-gray-500">{{ user.email }}</div>
+                            </div>
+                            <a href="{% url 'admin:index' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition duration-200">
+                                <i class="fas fa-user-cog mr-2"></i>Panel Admin
+                            </a>
+                            <div class="border-t border-gray-200"></div>
+                            <a href="{% url 'usuarios:logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition duration-200">
                                 <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
                             </a>
                         </div>
                     </div>
+                </div>
+                {% else %}
+                <div class="flex items-center space-x-4">
+                    <a href="{% url 'admin:index' %}" class="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-md transition duration-200">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión en panel de control
+                    </a>
                 </div>
                 {% endif %}
             </div>
@@ -43,10 +61,13 @@
     <main class="container mx-auto px-4 py-8">
         {% if messages %}
             {% for message in messages %}
-                <div class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %}">
+                <div class="mb-4 p-4 rounded-md {% if message.tags == 'success' %}bg-green-100 border border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-100 border border-red-400 text-red-700{% else %}bg-blue-100 border border-blue-400 text-blue-700{% endif %} alert">
                     <div class="flex items-center">
                         <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-triangle{% else %}info-circle{% endif %} mr-2"></i>
                         {{ message }}
+                        <button class="ml-auto text-lg" onclick="this.parentElement.parentElement.style.display='none'">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
             {% endfor %}
@@ -90,7 +111,48 @@
             }
         });
 
-        // Auto-hide messages
+        // Dropdown functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userDropdown = document.getElementById('user-dropdown');
+            const dropdownArrow = document.getElementById('dropdown-arrow');
+            
+            if (userMenuButton && userDropdown) {
+                // Toggle dropdown on button click
+                userMenuButton.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    const isHidden = userDropdown.classList.contains('hidden');
+                    
+                    if (isHidden) {
+                        userDropdown.classList.remove('hidden');
+                        dropdownArrow.style.transform = 'rotate(180deg)';
+                    } else {
+                        userDropdown.classList.add('hidden');
+                        dropdownArrow.style.transform = 'rotate(0deg)';
+                    }
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                        dropdownArrow.style.transform = 'rotate(0deg)';
+                    }
+                });
+
+                // Close dropdown on escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape') {
+                        userDropdown.classList.add('hidden');
+                        dropdownArrow.style.transform = 'rotate(0deg)';
+                    }
+                });
+            }
+        });
+
+        // Auto-hide messages after 5 seconds
         setTimeout(function() {
             $('.alert').fadeOut('slow');
         }, 5000);

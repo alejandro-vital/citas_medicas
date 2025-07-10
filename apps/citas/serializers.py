@@ -1,33 +1,25 @@
 from rest_framework import serializers
-from .models import Cita, Doctor
+
+
+from .models import Cita
 from apps.pacientes.models import Paciente
-
-class PacienteSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Paciente
-        fields = ['id', 'nombre', 'apellido', 'email', 'telefono', 'fecha_nacimiento', 'direccion', 'nombre_completo']
-        read_only_fields = ['nombre_completo']
-
-class DoctorSerializer(serializers.ModelSerializer):
-    name = serializers.CharField(source='usuario.get_full_name', read_only=True)
-    
-    class Meta:
-        model = Doctor
-        fields = ['id', 'name', 'especialidad', 'numero_licencia']
+from apps.pacientes.serializers import PacienteSerializer
+from apps.usuarios.serializers import DoctorSerializer
+from apps.usuarios.models import Doctor
 
 class CitaSerializer(serializers.ModelSerializer):
     paciente = PacienteSerializer(read_only=True)
     doctor = DoctorSerializer(read_only=True)
     paciente_id = serializers.IntegerField(write_only=True)
     doctor_id = serializers.IntegerField(write_only=True)
-    cita_type_display = serializers.CharField(source='get_cita_type_display', read_only=True)
+    tipo_cita_visualizar = serializers.CharField(source='get_tipo_cita_visualizar', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     
     class Meta:
         model = Cita
         fields = [
             'id', 'numero_cita', 'paciente', 'doctor', 'paciente_id', 'doctor_id',
-            'tipo_cita', 'cita_type_display', 'fecha_hora_cita', 
+            'tipo_cita', 'tipo_cita_visualizar', 'fecha_hora_cita', 
             'notas', 'estado', 'status_display', 'created_at', 'updated_at'
         ]
         read_only_fields = ['numero_cita', 'created_at', 'updated_at']
